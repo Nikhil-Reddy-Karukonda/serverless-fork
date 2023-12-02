@@ -21,7 +21,40 @@ const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus,
     let textData;
     let htmlData;
 
-    if (status === "SUCCESS") {
+    if (!isValidUrl(submissionUrl) || !submissionUrl.endsWith('.zip')) {
+        textData = `Greetings ${userEmail},\n\n` +
+            `We've noticed a problem with your recent assignment submission. The zip file at the provided submission URL was not reachable.\n` +
+            `Could you please verify that the submission URL (ending in .zip) is correct and accessible? Once confirmed, kindly resubmit before the deadline.\n\n` +
+            `Assignment Title: ${assignmentName}\n\n` +
+            `Your Submission Link: ${submissionUrl}\n\n` +
+            `Warm regards,\n` +
+            `The Administration Team`;
+
+        htmlData = `<p>Greetings ${userEmail},</p>` +
+            `<p>We've noticed a problem with your recent assignment submission. The zip file at the provided submission URL was not reachable.</p>` +
+            `<p>Could you please verify that the submission URL (ending in .zip) is correct and accessible? Once confirmed, kindly resubmit before the deadline.</p>` +
+            `<p><strong>Assignment Title:</strong> ${assignmentName}</p>` +
+            `<p><strong>Your Submission Link:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>` +
+            `<p>For any queries or assistance, feel free to reach out to us.</p>` +
+            `<p>Warm regards,<br/>The Administration Team</p>`;
+    }
+    else if (isFileEmpty) {
+        textData = `Greetings ${userEmail},\n\n` +
+            `Your recent assignment submission could not be accepted as the file submitted does not contain any content.\n` +
+            `Please ensure that you are submitting a valid, non-empty zip file and try again.\n\n` +
+            `Assignment Title: ${assignmentName}\n\n` +
+            `Your Submission Link: ${submissionUrl}\n\n` +
+            `Warm regards,\n` +
+            `The Administration Team`;
+
+        htmlData = `<p>Greetings ${userEmail},</p>` +
+            `<p>Your recent assignment submission could not be accepted as the file submitted does not contain any content.</p>` +
+            `<p>Please ensure that you are submitting a valid, non-empty zip file and try again.</p>` +
+            `<p><strong>Assignment Title:</strong> ${assignmentName}</p>` +
+            `<p><strong>Your Submission Link:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>` +
+            `<p>Warm regards,<br/>The Administration Team</p>`;
+    }
+    else if (status === "SUCCESS") {
         textData = `Dear ${userEmail},\n\n` +
             `Your assignment has been submitted successfully. Please access your submission from the following link.\n` +
             `Assignment Name: ${assignmentName} \n` +
@@ -41,23 +74,6 @@ const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus,
             `<p><strong>Submission ID:</strong> ${submissionId}</p>` +
             `<p>If you encounter any issues or have questions, please contact us.</p>` +
             `<p>Best regards,<br/>Admin Team</p>`;
-    }
-    else if (!isValidUrl(submissionUrl) || !submissionUrl.endsWith('.zip')) {
-        textData = `Greetings ${userEmail},\n\n` +
-            `We've noticed a problem with your recent assignment submission. The zip file at the provided submission URL was not reachable.\n` +
-            `Could you please verify that the submission URL (ending in .zip) is correct and accessible? Once confirmed, kindly resubmit before the deadline.\n\n` +
-            `Assignment Title: ${assignmentName}\n\n` +
-            `Your Submission Link: ${submissionUrl}\n\n` +
-            `Warm regards,\n` +
-            `The Administration Team`;
-
-        htmlData = `<p>Greetings ${userEmail},</p>` +
-            `<p>We've noticed a problem with your recent assignment submission. The zip file at the provided submission URL was not reachable.</p>` +
-            `<p>Could you please verify that the submission URL (ending in .zip) is correct and accessible? Once confirmed, kindly resubmit before the deadline.</p>` +
-            `<p><strong>Assignment Title:</strong> ${assignmentName}</p>` +
-            `<p><strong>Your Submission Link:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>` +
-            `<p>For any queries or assistance, feel free to reach out to us.</p>` +
-            `<p>Warm regards,<br/>The Administration Team</p>`;
     }
     else if (status === 'DEADLINE_PASSED') {
         textData = `Hello ${userEmail},\n\n` +
@@ -89,22 +105,7 @@ const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus,
             `<p>Please review the assignment guidelines and contact us if you require further assistance.</p>` +
             `<p>Best regards,<br/>Admin Team</p>`;
     }
-    else if (isFileEmpty) {
-        textData = `Greetings ${userEmail},\n\n` +
-            `Your recent assignment submission could not be accepted as the file submitted does not contain any content.\n` +
-            `Please ensure that you are submitting a valid, non-empty zip file and try again.\n\n` +
-            `Assignment Title: ${assignmentName}\n\n` +
-            `Your Submission Link: ${submissionUrl}\n\n` +
-            `Warm regards,\n` +
-            `The Administration Team`;
 
-        htmlData = `<p>Greetings ${userEmail},</p>` +
-            `<p>Your recent assignment submission could not be accepted as the file submitted does not contain any content.</p>` +
-            `<p>Please ensure that you are submitting a valid, non-empty zip file and try again.</p>` +
-            `<p><strong>Assignment Title:</strong> ${assignmentName}</p>` +
-            `<p><strong>Your Submission Link:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>` +
-            `<p>Warm regards,<br/>The Administration Team</p>`;
-    }
     else {
         textData = `Dear ${userEmail},\n\n` +
             `We encountered an issue with your assignment submission. Please ensure that your submission complies with the guidelines and resubmit.\n` +
