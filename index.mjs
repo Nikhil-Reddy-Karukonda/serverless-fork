@@ -8,6 +8,9 @@ dotenv.config();
 const bucketName = process.env.bucketName;
 
 let isFileEmpty;
+let submissionId;
+let gcpPath;
+let signedUrl;
 
 const downloadRepo = async (repoUrl, destination) => {
     try {
@@ -39,6 +42,7 @@ export const handler = async (event) => {
     let submittedUserEmail, submissionURL, signedUrl, assignmentName, gcpPath, status, message;
     try {
         const snsMessage = JSON.parse(event.Records[0].Sns.Message);
+        console.log(snsMessage);
         submittedUserEmail = snsMessage.email;
         assignmentName = snsMessage.assignmentName;
         submissionURL = snsMessage.submissionUrl;
@@ -46,20 +50,19 @@ export const handler = async (event) => {
         const submittedAssignmentID = snsMessage.assignmentId;
         status = snsMessage.status;
         message = snsMessage.message;
-        const assignment_creator = snsMessage.accountId;
         const submissionId = snsMessage.submission_id
 
-        await downloadRepo(submissionURL, submittedAssignmentID);
+        if (status === 'SUCCESS') {
+            await downloadRepo(submissionURL, submittedAssignmentID);
+            const submittedBucketName = `${assignmentName}/${submittedUserEmail}/SubmissionAttempt-${submissionCount}`;
+            gcpPath = bucketName + '/' + submittedBucketName
+            signedUrl = await cloudStorage(`/tmp/${submittedAssignmentID}.zip`, submittedBucketName);
+        }
 
-        const submittedBucketName = `${assignmentName}/${submittedUserEmail}/SubmissionAttempt-${submissionCount}`;
-        gcpPath = bucketName + '/' + submittedBucketName
-
-        signedUrl = await cloudStorage(`/tmp/${submittedAssignmentID}.zip`, submittedBucketName);
-
-        await sendEmailConfirmation(submittedUserEmail, submissionURL, true, signedUrl, assignmentName, gcpPath, status, message, assignment_creator, submissionId, isFileEmpty);
+        await sendEmailConfirmation(submittedUserEmail, submissionURL, true, signedUrl, assignmentName, gcpPath, status, message, submissionId, isFileEmpty);
     }
     catch (error) {
-        await sendEmailConfirmation(submittedUserEmail, submissionURL, false, signedUrl, assignmentName, gcpPath, status, message, assignment_creator, submissionId, isFileEmpty);
+        await sendEmailConfirmation(submittedUserEmail, submissionURL, false, signedUrl, assignmentName, gcpPath, status, message, submissionId, isFileEmpty);
         console.error('Error:', error.message);
         return { statusCode: 500, body: 'Error processing SNS message.' };
     }
