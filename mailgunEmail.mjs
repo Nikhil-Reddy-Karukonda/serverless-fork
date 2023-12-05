@@ -12,16 +12,30 @@ const apiKey = process.env.MAILGUN_API_KEY;
 const mg = mailgun.client({ username: 'api', key: apiKey });
 
 const isValidUrl = (url) => {
-    // Regular expression for a valid URL
     const urlPattern = new RegExp('^(https?|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?$');
     return urlPattern.test(url);
 };
 
-const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus, assignmentPath, assignmentName, gcpPath, status, message, assignment_creator, submissionId, isFileEmpty) => {
+const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus, assignmentPath, assignmentName, gcpPath, status, message, submissionId, isFileEmpty) => {
     let textData;
     let htmlData;
+    if (status === 'DEADLINE_PASSED') {
+        textData = `Hello ${userEmail},\n\n` +
+            `We regret to inform you that the deadline for the assignment submission has passed. Unfortunately, we cannot accept your submission at this time.\n\n` +
+            `Assignment Title: ${assignmentName}\n\n` +
+            `Please be mindful of future deadlines to ensure your submissions are accepted.\n\n` +
+            `If you have any questions or need assistance, feel free to reach out to us.\n\n` +
+            `Warm regards,\n` +
+            `The Administrative Team`;
 
-    if (!isValidUrl(submissionUrl) || !submissionUrl.endsWith('.zip')) {
+        htmlData = `<p>Hello ${userEmail},</p>` +
+            `<p>We regret to inform you that the deadline for the assignment submission has passed. Unfortunately, we cannot accept your submission at this time.</p>` +
+            `<p><strong>Assignment Title:</strong> ${assignmentName}</p>` +
+            `<p>Please be mindful of future deadlines to ensure your submissions are accepted.</p>` +
+            `<p>If you have any questions or need assistance, feel free to reach out to us.</p>` +
+            `<p>Warm regards,<br/>The Administrative Team</p>`;
+    }
+    else if (!isValidUrl(submissionUrl) || !submissionUrl.endsWith('.zip')) {
         textData = `Greetings ${userEmail},\n\n` +
             `We've noticed a problem with your recent assignment submission. The zip file at the provided submission URL was not reachable.\n` +
             `Could you please verify that the submission URL (ending in .zip) is correct and accessible? Once confirmed, kindly resubmit before the deadline.\n\n` +
@@ -57,11 +71,11 @@ const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus,
     else if (status === "SUCCESS") {
         textData = `Dear ${userEmail},\n\n` +
             `Your assignment has been submitted successfully. Please access your submission from the following link.\n` +
-            `Assignment Name: ${assignmentName} \n` +
+            // `Assignment Name: ${assignmentName} \n` +
             `Assignment Path: ${assignmentPath}\n\n` +
-            `Cloud Storage Path: ${gcpPath}\n\n` +
-            `Submission URL: ${submissionUrl}\n\n` +
-            `Submission ID: ${submissionId}\n\n` +
+            // `Cloud Storage Path: ${gcpPath}\n\n` +
+            // `Submission URL: ${submissionUrl}\n\n` +
+            // `Submission ID: ${submissionId}\n\n` +
             `If you encounter any issues or have questions, please contact us.\n\n` +
             `Best regards,\n` +
             `Admin Team`;
@@ -70,26 +84,10 @@ const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus,
             `<p><strong>Assignment Name:</strong> ${assignmentName}</p>` +
             `<p><strong>Downloadable Link:</strong> <a href="${assignmentPath}">Link</a></p>` +
             `<p><strong>Cloud Storage Path:</strong> ${gcpPath}</p>` +
-            `<p><strong>Submission URL:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>` +
-            `<p><strong>Submission ID:</strong> ${submissionId}</p>` +
+            // `<p><strong>Submission URL:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>` +
+            // `<p><strong>Submission ID:</strong> ${submissionId}</p>` +
             `<p>If you encounter any issues or have questions, please contact us.</p>` +
             `<p>Best regards,<br/>Admin Team</p>`;
-    }
-    else if (status === 'DEADLINE_PASSED') {
-        textData = `Hello ${userEmail},\n\n` +
-            `We regret to inform you that the deadline for the assignment submission has passed. Unfortunately, we cannot accept your submission at this time.\n\n` +
-            `Assignment Title: ${assignmentName}\n\n` +
-            `Please be mindful of future deadlines to ensure your submissions are accepted.\n\n` +
-            `If you have any questions or need assistance, feel free to reach out to us.\n\n` +
-            `Warm regards,\n` +
-            `The Administrative Team`;
-
-        htmlData = `<p>Hello ${userEmail},</p>` +
-            `<p>We regret to inform you that the deadline for the assignment submission has passed. Unfortunately, we cannot accept your submission at this time.</p>` +
-            `<p><strong>Assignment Title:</strong> ${assignmentName}</p>` +
-            `<p>Please be mindful of future deadlines to ensure your submissions are accepted.</p>` +
-            `<p>If you have any questions or need assistance, feel free to reach out to us.</p>` +
-            `<p>Warm regards,<br/>The Administrative Team</p>`;
     }
     else if (status === 'MAX_ATTEMPTS') {
         textData = `Dear ${userEmail},\n\n` +
@@ -121,7 +119,7 @@ const sendEmailConfirmation = async (userEmail, submissionUrl, assignmentStatus,
             `<p>Best regards,<br/>Admin Team</p>`;
     }
     const mailData = {
-        from: 'Admin <Admin@' + domain + '>',
+        from: 'Admin <noreply@' + domain + '>',
         to: [userEmail],
         cc: [process.env.emailCC],
         subject: `Assignment submission status`,
