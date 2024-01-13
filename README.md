@@ -60,3 +60,4 @@ The Lambda function is triggered by an SNS notification and is responsible for:
 - Downloading releases from GitHub repositories to GCS.
 - Emailing users about the status of the download (email detailing the submission status and paths in the GCS bucket for both successful and failed scenarios).
 - Tracking sent emails in DynamoDB for auditing purposes.
+- Monitor CloudWatch Logs - Lambda function execution.
